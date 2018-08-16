@@ -7,7 +7,10 @@ package org.firstinspires.ftc.teamcode.vv7797.opmode;
  * The TeleOp allows drivers to effortlessly move in any direction with the help of polar
  * mathematics, turn with ease thanks to "dual zone" analog stick calculations, toggle intake
  * motors and ramp positions with the push of a button, extend and retract linear slide, and
- * control servos and other ammenities with ease...
+ * control servos and other ammenities with ease.
+ *
+ * This file is intenitonally commented to explain even the minorest of details and controls...
+ * If it seems as though some aspects of the code have been overexplained, keep this in mind.
  *
  * Michael Munoz, 2017/18 7797 Software Co-Lead
  * michaelmunoz1101@gmail.com
@@ -28,13 +31,12 @@ import org.firstinspires.ftc.teamcode.vv7797.opmode.util.exception.AbortExceptio
 import java.util.ArrayList;
 
 @TeleOp(name = "Supercell Michael")
-// Class header
 public class MichaelOp extends OpMode {
-    // Variable Declarations
     // Declare Hardware (Motors and servos to be used during TeleOp)
     private DcMotorEx dtFrontLeft, dtFrontRight, dtBackLeft, dtBackRight;
     private DcMotorEx drvIntakeLeft, drvIntakeRight, drvLinearSlide, drvVacuum;
     private Servo srvRamp, srvPhone, srvRelicArm, srvRelicClaw, srvArmSwivel, srvArmShoulder, srvLatch;
+
     // Declare Servo Positions And Motor Speed Limiters
     private final double INTAKE_CAP = 0.25;
     private final double DRIVE_CAP = 0.6;
@@ -43,12 +45,15 @@ public class MichaelOp extends OpMode {
     private final double RELIC_ARM_POSITION_UP = 1;
     private final double RELIC_CLAW_POSITION_CLOSED = 1;
     private final double RELIC_CLAW_POSITION_OPEN = 0.33;
+
     // Declare Boolean Variables
     private boolean intake, intakeReverse, ramp, limiter, arm, claw, latch;
     private boolean cTIntake, cTIntakeReverse, cTRamp, cTLimiter, cTArm, cTClaw, cTCorrector, cTLatch;
+
     // Declare Motor Power Variables
     private double LFP, LRP, RFP, RRP, driveAngle, intakePower;
     private double INTAKE_MOD = INTAKE_CAP, DRIVE_MOD = DRIVE_CAP;
+
     // Declare Data Structures
     private ArrayList<ConcurrentInstruction> schedule = new ArrayList<>();
     private DcMotorEx[] drivetrain;
@@ -61,6 +66,8 @@ public class MichaelOp extends OpMode {
      */
     @Override
     public void init() {
+        telemetry.addData("Status", "Hardware Initialization Started");
+
         // Instantiate motors
         dtFrontLeft = (DcMotorEx)hardwareMap.dcMotor.get("drvFrontLeft");
         dtFrontRight = (DcMotorEx)hardwareMap.dcMotor.get("drvFrontRight");
@@ -70,6 +77,7 @@ public class MichaelOp extends OpMode {
         drvIntakeRight = (DcMotorEx)hardwareMap.dcMotor.get("drvIntakeRight");
         drvLinearSlide = (DcMotorEx)hardwareMap.dcMotor.get("drvLinearSlide");
         drvVacuum = (DcMotorEx)hardwareMap.dcMotor.get("drvVacuum");
+
         // Set motor run modes
         dtFrontLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         dtFrontRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -77,12 +85,41 @@ public class MichaelOp extends OpMode {
         dtBackRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         drvIntakeLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         drvIntakeRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
         // Set drivetrain motor braking behavior (without this the robot will 'glide' after no power is given)
         dtFrontLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         dtFrontRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         dtBackLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         dtBackRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        // Instantiate boolean variables
+
+        // Set motor directions
+        dtFrontLeft.setDirection(DcMotor.Direction.REVERSE);
+        dtBackLeft.setDirection(DcMotor.Direction.REVERSE);
+        drvIntakeRight.setDirection(DcMotor.Direction.REVERSE);
+        drvLinearSlide.setDirection(DcMotor.Direction.REVERSE);
+
+        // Instantiate servos
+        srvRamp = hardwareMap.servo.get("srvRamp");
+        srvPhone = hardwareMap.servo.get("srvPhone");
+        srvRelicArm = hardwareMap.servo.get("srvRelicArm");
+        srvRelicClaw = hardwareMap.servo.get("srvRelicClaw");
+        srvArmSwivel = hardwareMap.servo.get("srvArmSwivel");
+        srvArmShoulder = hardwareMap.servo.get("srvArmShoulder");
+        srvLatch = hardwareMap.servo.get("srvLatch");
+
+        // Set initial servo positions
+        srvRamp.setPosition(1);
+        srvPhone.setPosition(0.5);
+        srvRelicArm.setPosition(RELIC_ARM_POSITION_DOWN);
+        srvRelicClaw.setPosition(RELIC_CLAW_POSITION_CLOSED);
+        srvArmSwivel.setPosition(0.5);
+        srvArmShoulder.setPosition(1);
+        srvLatch.setPosition(0);
+
+        // Set drive train to go forward
+        driveAngle = Math.PI/4;
+
+        // Instantiate boolean variables (used for toggle controls)
         limiter = true;
         cTIntake = true;
         cTIntakeReverse = true;
@@ -92,30 +129,8 @@ public class MichaelOp extends OpMode {
         cTClaw = true;
         cTCorrector = true;
         cTLatch = true;
-        // Set motor directions
-        dtFrontLeft.setDirection(DcMotor.Direction.REVERSE);
-        dtBackLeft.setDirection(DcMotor.Direction.REVERSE);
-        drvIntakeRight.setDirection(DcMotor.Direction.REVERSE);
-        drvLinearSlide.setDirection(DcMotor.Direction.REVERSE);
-        // Instantiate servos
-        srvRamp = hardwareMap.servo.get("srvRamp");
-        srvPhone = hardwareMap.servo.get("srvPhone");
-        srvRelicArm = hardwareMap.servo.get("srvRelicArm");
-        srvRelicClaw = hardwareMap.servo.get("srvRelicClaw");
-        srvArmSwivel = hardwareMap.servo.get("srvArmSwivel");
-        srvArmShoulder = hardwareMap.servo.get("srvArmShoulder");
-        srvLatch = hardwareMap.servo.get("srvLatch");
-        // Set initial servo positions
-        srvRamp.setPosition(1);
-        srvPhone.setPosition(0.5);
-        srvRelicArm.setPosition(RELIC_ARM_POSITION_DOWN);
-        srvRelicClaw.setPosition(RELIC_CLAW_POSITION_CLOSED);
-        srvArmSwivel.setPosition(0.5);
-        srvArmShoulder.setPosition(1);
-        srvLatch.setPosition(0);
-        // Set drive train to go forward
-        driveAngle = Math.PI/4;
-        telemetry.addData("Status", "Hardware initialized");
+
+        telemetry.addData("Status", "Hardware Initialized");
     }
 
 
@@ -165,33 +180,44 @@ public class MichaelOp extends OpMode {
      */
     private void victorianDrive() {
         // Collect controller inputs
-        double lsx = gamepad1.left_stick_x, lsy = gamepad1.left_stick_y;
+        double lsx = gamepad1.left_stick_x;
+        double lsy = gamepad1.left_stick_y;
         double rsx = gamepad1.right_stick_x;
+
+        // Set variables used for polar calculations
         double r = Math.hypot(lsx, lsy);
         double stickAngle = Math.atan2(lsy, -lsx);
+
         // Set "front" of the robot
         if(padPressed())
             setDriveAngle();
+
         // Calculate power angle derived from analog stick angle
         double powerAngle = stickAngle - driveAngle;
+
         // Calculate dual zone analog turn power
         double turn = getDualZonePower(rsx);
+
         // Calculate sin and cos power values
         double cos = r*Math.cos(powerAngle);
         double sin = r*Math.sin(powerAngle);
+
         // Ramp up power values
         double cosPow = EPSILON*cos;
         double sinPow = EPSILON*sin;
+
         // Calculate individual motor power values
         LFP = Range.clip(cosPow-turn, -1.0, 1.0);
         LRP = Range.clip(sinPow-turn, -1.0, 1.0);
         RFP = Range.clip(sinPow+turn, -1.0, 1.0);
         RRP = Range.clip(cosPow+turn, -1.0, 1.0);
-        // Set power limiter
+
+        // Set drive train power limiter
         LFP*=DRIVE_MOD;
         LRP*=DRIVE_MOD;
         RFP*=DRIVE_MOD;
         RRP*=DRIVE_MOD;
+
         // Set drivetrain motor power
         dtFrontLeft.setPower(LFP);
         dtFrontRight.setPower(RFP);
@@ -251,8 +277,11 @@ public class MichaelOp extends OpMode {
      * Toggle intake motor power
      */
     private void setIntakePower() {
-        boolean x = (gamepad1.x || gamepad2.x), y = (gamepad1.y || gamepad2.y);
+        boolean x = (gamepad1.x || gamepad2.x);
+        boolean y = (gamepad1.y || gamepad2.y);
         boolean c = (gamepad1.left_trigger > 0.1 || gamepad1.right_trigger > 0.1);
+
+        // Intake toggle
         if(x && cTIntake) {
             if(intakeReverse) {
                 intakeReverse = false;
@@ -264,6 +293,7 @@ public class MichaelOp extends OpMode {
         else if(!x)
             cTIntake = true;
 
+        // Reverse intake toggle
         if(y && cTIntakeReverse) {
             if(intake) {
                 intake = false;
@@ -275,6 +305,7 @@ public class MichaelOp extends OpMode {
         else if(!y)
             cTIntakeReverse = true;
 
+        // Set intake motor power limiter
         if(intake)
             intakePower = 1*INTAKE_MOD;
         else if(intakeReverse)
@@ -282,6 +313,7 @@ public class MichaelOp extends OpMode {
         else
             intakePower = 0;
 
+        // Intake corrector toggle
         if (c && cTCorrector) {
             intakePower = -1;
             intakeReverse = true;
@@ -299,6 +331,7 @@ public class MichaelOp extends OpMode {
         } else if (!c)
             cTCorrector = true;
 
+        // Set intake motor power
         drvIntakeLeft.setPower(intakePower);
         drvIntakeRight.setPower(intakePower);
     }
@@ -308,7 +341,9 @@ public class MichaelOp extends OpMode {
      * Toggles ramp position
      */
     private void setRampPosition() {
-        boolean lb = gamepad1.left_bumper, rb = gamepad1.right_bumper;
+        boolean lb = gamepad1.left_bumper;
+        boolean rb = gamepad1.right_bumper;
+
         // Both bumpers raise the ramp
         if((lb || rb) && cTRamp) {
             cTRamp = false;
@@ -332,8 +367,10 @@ public class MichaelOp extends OpMode {
      * Toggle relic arm & relic claw servo positions
      */
     private void setLinearServos() {
-        boolean lb = gamepad2.left_bumper, rb = gamepad2.right_bumper;
-        // Toggles Relic Arm Position
+        boolean lb = gamepad2.left_bumper;
+        boolean rb = gamepad2.right_bumper;
+
+        // Toggles relic arm
         if(lb && cTArm) {
             arm = !arm;
             cTArm = false;
@@ -342,7 +379,8 @@ public class MichaelOp extends OpMode {
         }
         else if(!lb)
             cTArm = true;
-        // Toggles Relic Claw Position
+
+        // Toggles relic claw
         if(rb && cTClaw) {
             claw = !claw;
             cTClaw = false;
@@ -351,7 +389,8 @@ public class MichaelOp extends OpMode {
         }
         else if(!rb)
             cTClaw = true;
-        // Toggles the latch
+
+        // Toggles latch
         boolean a = gamepad2.a;
         if (a && cTLatch) {
             latch = !latch;
@@ -380,7 +419,9 @@ public class MichaelOp extends OpMode {
      * Set intake and drivetrain motor power limiter
      */
     private void setLimiter() {
-        boolean ls = gamepad1.left_stick_button, rs = gamepad1.right_stick_button;
+        boolean ls = gamepad1.left_stick_button;
+        boolean rs = gamepad1.right_stick_button;
+
         // Both stick buttons toggle intake mods
         if((ls || rs) && cTLimiter) {
             limiter = !limiter;
