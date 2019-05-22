@@ -1,11 +1,11 @@
 # Supercell
-## TeleOp written by FTC Team 779 Victorian Voltage for the 2017-2018 Relic Recovery Game
+## TeleOp written by FTC Team 7797 Victorian Voltage for the 2017-2018 Relic Recovery Game
 The focus of this TeleOp, Supercell, is to allow drivers to easily multitask and minimize excess hand/finger movement while driving using the Logitech Gamepad controllers.
 
 This code was designed and written by the drivers of 7797 for the most convenient and enjoyable driver experience.
 
 ## Design Overview
-Supercell accomadates up to 2 drivers. The two drivers' responsibilites are split in such a way that a *complete cypher* can be constructed in **under 50 seconds**, even without a *second driver*.
+Supercell accomadates up to 2 drivers. The 2 drivers' responsibilites are split in such a way that a *complete cypher* can be constructed in **under 50 seconds** without the need for a *second driver*.
 
 Responsibilites and controls of each driver are as follows.
 
@@ -18,7 +18,7 @@ Responsibilites and controls of each driver are as follows.
   * Motors located at the front of the bot used for sucking *glyphs* into robot
   * X - Intake 
   * Y - Reverse Intake
-  * Y - Quickly spits out and then switches back to sucking in *glyph*
+  * L/R Triggers - Quickly spits out and then switches back to sucking in *glyph*
 * Ramp 
   * Used for dumping and scoring *glyphs*
   * L/R Bumpers - Toggle position of scoring ramp
@@ -26,7 +26,7 @@ Responsibilites and controls of each driver are as follows.
 **Driver 2 :**
 * Relic Arm 
   * Linear slide used for *relic* scoring in end game
-  * L-joustick - Extension and retraction of relic arm
+  * L-joystick - Extension and retraction of relic arm
 * Relic Servos
   * Servos attached to end of Relic Arm used to grab and release *relic*
   * L-Bumper - Toggle relic arm position
